@@ -6,13 +6,29 @@
   "engines": {
     "vscode": "^1.103.0"
   },
-  "categories": ["Formatters"],
-  "activationEvents": ["onLanguage:css", "onLanguage:html"],
+  "categories": [
+    "Formatters"
+  ],
+  "activationEvents": [
+    "onLanguage:css",
+    "onLanguage:html"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
-      { "id": "css", "extensions": [".css"] },
-      { "id": "html", "extensions": [".html", ".htm"] }
+      {
+        "id": "css",
+        "extensions": [
+          ".css"
+        ]
+      },
+      {
+        "id": "html",
+        "extensions": [
+          ".html",
+          ".htm"
+        ]
+      }
     ]
   },
   "scripts": {
@@ -25,14 +41,19 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.103.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
+    "@types/vscode": "^1.103.0",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
-    "eslint": "^9.32.0",
-    "typescript": "^5.9.2",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.6.0",
+    "eslint": "^9.32.0",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dylanbeattie/css-formatter-for-vs-code.git"
   }
 }
