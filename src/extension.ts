@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 
 export function removeBlankLinesBetweenOneLiners(css: string): string {
   return css.replace(
-    /(\s*\S.+\s*{\s*[^{};]+;\s*}[ \t]*\r?\n)([ \t]*\r?\n)+(?=\s*(\S.+?)+\s*{\s*[^{};]+;\s*}|\s*})/g,
+    /(\s*\S.*\s*{\s*[^{};]+;\s*}[ \t]*\r?\n)([ \t]*\r?\n)+(?=\s*(\S.+?)+\s*{\s*[^{};]+;\s*}|\s*})/g,
     '$1'
   );
 }
@@ -22,7 +22,7 @@ export function collapseSingleRules(css: string, eol: string = "\n"): string {
     }
   }
   let cssWithOneLiners = css.replace(
-    /^(\s*)(\S.+)\s+{\s*([^{};]+;)\s*}(\r?\n)+/mg,
+    /^(\s*)(\S.*)\s+{\s*([^{};]+;)\s*}(\r?\n)+/mg,
     (match, indent, selector, rule, offset) => {
       let result = `${indent}${selector} { ${rule} }${eol}${eol}`;
       if (result.length > 72) { return match; }
@@ -37,15 +37,21 @@ export function collapseSingleRules(css: string, eol: string = "\n"): string {
 export function activate(context: vscode.ExtensionContext) {
   let provider = vscode.languages.registerDocumentFormattingEditProvider(['css', 'html'], {
     async provideDocumentFormattingEdits(document: vscode.TextDocument) {
+      
+      let text = document.getText();
+
+      await vscode.extensions.getExtension('vscode.html-language-features')?.activate();
+
       const eol = document.eol === vscode.EndOfLine.LF ? "\n" : "\r\n";
       // Get the default formatter's edits
       const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
         'vscode.executeFormatDocumentProvider',
-        document.uri
+        document.uri,
+        { tabSize: 2, insertSpaces: false, insertFinalNewline: true } satisfies vscode.FormattingOptions
       );
 
       // Apply the default formatter's edits to the text in memory
-      let text = document.getText();
+      text = document.getText();
       if (edits && edits.length > 0) {
         // Sort edits in reverse order to avoid messing up offsets
         const sortedEdits = [...edits].sort((a, b) => {
@@ -63,11 +69,13 @@ export function activate(context: vscode.ExtensionContext) {
       let finalText = text;
       if (document.languageId === 'css') {
         finalText = collapseSingleRules(text, eol);
+        finalText = finalText.replace(/^[ ]+/gm, match => '\t'.repeat(Math.floor(match.length / 2)));
       } else if (document.languageId === 'html') {
         finalText = text.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (match, css) => {
           return '<style>' + collapseSingleRules(css, eol) + '</style>';
         });
-      }
+        finalText = finalText.replace(/^[ ]+/gm, match => '\t'.repeat(Math.floor((match.length - 2) / 2)));
+    }
       // Use the correct full document range for replacement
       const fullRange = new vscode.Range(
         document.positionAt(0),
