@@ -28,10 +28,35 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
 
+      function removeBlankLinesBetweenOneLiners(css: string): string {
+        return css.replace(
+          /(\s*\S.+\s*{\s*[^{};]+;\s*}[ \t]*\r?\n)([ \t]*\r?\n)+(?=\s*(\S.+?)+\s*{\s*[^{};]+;\s*}|\s*})/g,
+          '$1'
+        );
+      }
+
       function collapseSingleRules(css: string): string {
-        return css.replace(/\s*{\s*([^{};]+);\s*}(\r?\n)+/g, (match, capture1, offset) => {
-          return ` { ${capture1} }${eol}`;
-        });
+        const lines = css.split(/\r?\n/);
+        let margin = "                                                    ";
+        for (const line of lines) {
+          if (line.trim()) {
+            const match = line.match(/^[ \t]*/);
+            if (match && match[0].length < margin.length) {
+              margin = match[0];
+            }
+          }
+        }
+        let cssWithOneLiners = css.replace(
+          /^(\s*)(\S.+)\s*{\s*([^{};]+;)\s*}(\r?\n)+/mg,
+          (match, indent, selector, rule, offset) => {
+            let result = `${indent}${selector} { ${rule} }${eol}${eol}`;
+            if (result.length > 72) { return match };
+            // if (indent === margin) { result += eol; }
+            return result;
+          }
+        );
+
+        return removeBlankLinesBetweenOneLiners(cssWithOneLiners);
       }
 
       let finalText = text;
