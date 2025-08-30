@@ -1,26 +1,50 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+'use strict';
+
 import * as vscode from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  let provider = vscode.languages.registerDocumentFormattingEditProvider(['css', 'html'], {
+      async provideDocumentFormattingEdits(document: vscode.TextDocument) {
+        const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
+          'vscode.executeFormatDocumentProvider',
+          document.uri
+        );
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "single-line-css-formatter" is now active!');
+        let text = document.getText();
+        if (edits && edits.length > 0) {
+          const wsEdit = new vscode.WorkspaceEdit();
+          wsEdit.set(document.uri, edits);
+          await vscode.workspace.applyEdit(wsEdit);
+          text = document.getText();
+        }
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('single-line-css-formatter.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Single Line CSS Formatter!');
-	});
+        function collapseSingleRules(css: string): string {
+//          return css.replace(/([^{]+){\s*([^{};]+:[^{};]+);?\s*}/g, (match, selector, decl) => {
+          return css.replace(/{\s*([^{};]+);\s*}/g, (match, capture1, offset) => {
+            return ` { ${capture1} }`;
+            // const parts: string[] = decl.split(';').map((s: string) => s.trim()).filter(Boolean);
+            // if (parts.length === 1) {
+            //   return selector.trim() + ' { ' + decl.trim() + '; }';
+            // }
+            // return match;
+          });
+        }
 
-	context.subscriptions.push(disposable);
+        let finalText = text;
+        if (document.languageId === 'css') {
+          finalText = collapseSingleRules(text);
+        } else if (document.languageId === 'html') {
+          finalText = text.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (match, css) => {
+            return '<style>' + collapseSingleRules(css) + '</style>';
+          });
+        }
+        const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(text.length));
+        return [vscode.TextEdit.replace(fullRange, finalText)];
+      }
+    }
+  );
+
+  context.subscriptions.push(provider);
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

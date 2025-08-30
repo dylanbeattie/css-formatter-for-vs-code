@@ -6,23 +6,20 @@
   "engines": {
     "vscode": "^1.103.0"
   },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [],
+  "categories": ["Formatters"],
+  "activationEvents": ["onLanguage:css", "onLanguage:html"],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "single-line-css-formatter.helloWorld",
-        "title": "Hello World"
-      }
+    "languages": [
+      { "id": "css", "extensions": [".css"] },
+      { "id": "html", "extensions": [".html", ".htm"] }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "package": "vsce package",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test"
