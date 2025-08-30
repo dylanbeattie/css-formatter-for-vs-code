@@ -3,8 +3,13 @@
 import * as vscode from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
+  let running = false;
   let provider = vscode.languages.registerDocumentFormattingEditProvider(['css', 'html'], {
-      async provideDocumentFormattingEdits(document: vscode.TextDocument) {
+    async provideDocumentFormattingEdits(document: vscode.TextDocument) {
+      // if (running) { return []; }
+      running = true;
+      try {
+        const eol = document.eol === vscode.EndOfLine.LF ? "\n" : "\r\n";
         const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
           'vscode.executeFormatDocumentProvider',
           document.uri
@@ -19,9 +24,8 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         function collapseSingleRules(css: string): string {
-//          return css.replace(/([^{]+){\s*([^{};]+:[^{};]+);?\s*}/g, (match, selector, decl) => {
-          return css.replace(/{\s*([^{};]+);\s*}/g, (match, capture1, offset) => {
-            return ` { ${capture1} }`;
+          return css.replace(/\s*{\s*([^{};]+);\s*}(\r?\n)+/g, (match, capture1, offset) => {
+            return ` { ${capture1} }${eol}`;
             // const parts: string[] = decl.split(';').map((s: string) => s.trim()).filter(Boolean);
             // if (parts.length === 1) {
             //   return selector.trim() + ' { ' + decl.trim() + '; }';
@@ -40,9 +44,11 @@ export function activate(context: vscode.ExtensionContext) {
         }
         const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(text.length));
         return [vscode.TextEdit.replace(fullRange, finalText)];
+      } finally {
+        running = false;
       }
     }
-  );
+  });
 
   context.subscriptions.push(provider);
 }
