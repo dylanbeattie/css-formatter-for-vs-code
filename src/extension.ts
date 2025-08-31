@@ -4,10 +4,26 @@
 import * as vscode from 'vscode';
 
 export function removeBlankLinesBetweenOneLiners(css: string): string {
-  return css.replace(
-    /(\s*\S.*\s*{\s*[^{};]+;\s*}[ \t]*\r?\n)([ \t]*\r?\n)+(?=\s*(\S.+?)+\s*{\s*[^{};]+;\s*}|\s*})/g,
-    '$1'
-  );
+  // Remove blank lines between single-line CSS rules
+  // Matches: rule + newline + one or more blank lines + lookahead for another rule or closing brace
+  const regex = new RegExp([
+    '(',                           // Group 1: The CSS rule line
+      '\\s*\\S.*\\s*',            // - optional whitespace, non-whitespace, any chars, whitespace
+      '{\\s*[^{};]+;\\s*}',       // - opening brace, rule content, semicolon, closing brace
+      '[ \\t]*\\r?\\n',           // - optional spaces/tabs, line ending
+    ')',
+    '([ \\t]*\\r?\\n)+',          // Group 2: One or more blank lines (spaces/tabs + newlines)
+    '(?=',                        // Positive lookahead:
+      '\\s*',                     // - optional whitespace
+      '(',                        // - followed by either:
+        '\\S.+?',                 //   another CSS rule starting with non-whitespace
+      ')+\\s*{\\s*[^{};]+;\\s*}', //   with opening brace, content, semicolon, closing brace
+      '|',                        // - OR
+      '\\s*}',                    //   a closing brace (end of block)
+    ')'
+  ].join(''), 'g');
+
+  return css.replace(regex, '$1');
 }
 
 export function collapseSingleRules(css: string, eol: string = "\n"): string {
@@ -74,7 +90,7 @@ export function activate(context: vscode.ExtensionContext) {
         finalText = text.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (match, css) => {
           return '<style>' + collapseSingleRules(css, eol) + '</style>';
         });
-        finalText = finalText.replace(/^[ ]+/gm, match => '\t'.repeat(Math.floor((match.length - 2) / 2)));
+        finalText = finalText.replace(/^[ ]+/gm, match => 'BOBBINS' + '\t'.repeat(Math.floor((match.length - 2) / 2)));
     }
       // Use the correct full document range for replacement
       const fullRange = new vscode.Range(
