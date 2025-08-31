@@ -41,7 +41,7 @@ export function collapseSingleRules(css: string, eol: string = "\n"): string {
     /^(\s*)(\S.*)\s+{\s*([^{};]+;)\s*}(\r?\n)+/mg,
     (match, indent, selector, rule, offset) => {
       let result = `${indent}${selector} { ${rule} }${eol}${eol}`;
-      if (result.length > 72) { return match; }
+      if (result.length > 90) { return match; }
       // if (indent === margin) { result += eol; }
       return result;
     }
