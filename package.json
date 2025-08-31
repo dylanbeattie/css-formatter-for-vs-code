@@ -3,7 +3,7 @@
   "publisher": "dylanbeattie",
   "displayName": "Single Line CSS Formatter",
   "description": "Reformats CSS to leave single-property rules on one line",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "engines": {
     "vscode": "^1.103.0"
   },
