@@ -3,7 +3,7 @@
   "publisher": "dylanbeattie",
   "displayName": "Single Line CSS Formatter",
   "description": "Reformats CSS to leave single-property rules on one line",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "engines": {
     "vscode": "^1.103.0"
   },
@@ -40,7 +40,7 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-    "install": "rm -f *.vsix && npm version patch --force && npm run compile && vsce package && code --install-extension single-line-css-formatter-dylanbeattie-$(node -p \"require('./package.json').version\").vsix"
+    "install": "rm -f *.vsix && npm version patch --force && npm run compile && vsce package && code --install-extension single-line-css-formatter-$(node -p \"require('./package.json').version\").vsix"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
